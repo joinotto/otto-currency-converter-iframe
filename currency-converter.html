@@ -17,24 +17,20 @@
         .currency-converter-container {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f1f5f9;
-            padding: 0.5rem;
+            padding: 1rem;
             min-height: 100vh;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
-            overflow-x: hidden;
-            box-sizing: border-box;
         }
         
-        .converter-card {
+         .converter-card {
             background: white;
             border-radius: 12px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            padding: 1.5rem;
+            padding: 2rem;
             width: 100%;
-            max-width: 400px;
-            margin: 0.5rem auto;
-            box-sizing: border-box;
+            max-width: 450px;
         }
         
         .title {
@@ -695,6 +691,20 @@
                                 </div>
                             </div>
                         )}
+                        
+                        <div style={{ 
+                            marginTop: '2rem', 
+                            padding: '1rem', 
+                            background: '#f8fafc', 
+                            border: '1px solid #e2e8f0', 
+                            borderRadius: '8px', 
+                            fontSize: '0.75rem', 
+                            color: '#64748b', 
+                            textAlign: 'center' 
+                        }}>
+                            <strong>Disclaimer:</strong> Exchange rates are provided for informational purposes only and may not reflect real-time market rates. 
+                            Please verify rates with your financial institution before making any transactions.
+                        </div>
                     </div>
                 </div>
             );
