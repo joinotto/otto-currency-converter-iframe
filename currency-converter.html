@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otto Currency Converter</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .currency-converter-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            padding: 1rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .converter-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #3730a3;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.15s;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .currency-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .currency-select {
+            flex: 1;
+        }
+        
+        .swap-button {
+            padding: 0.75rem;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        
+        .swap-button:hover {
+            background: #d1d5db;
+        }
+        
+        .convert-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .convert-button:hover:not(:disabled) {
+            background: #4338ca;
+        }
+        
+        .convert-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .result-card {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+        }
+        
+        .result-amount {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3730a3;
+            margin-bottom: 0.75rem;
+        }
+        
+        .exchange-rate {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .error-card {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #dc2626;
+            font-size: 0.875rem;
+        }
+        
+        .error-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .spinner {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 10;
+            margin-top: 0.25rem;
+        }
+        
+        .dropdown-search {
+            padding: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+        
+        .dropdown-search input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+        
+        .dropdown-option {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .dropdown-option:hover {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+        
+        .dropdown-option.selected {
+            background: #eef2ff;
+            color: #3730a3;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 640px) {
+            .currency-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .swap-button {
+                align-self: center;
+            }
+            
+            .converter-card {
+                padding: 1.5rem;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="currency-converter-root"></div>
+
+    <script type="text/babel">
+        const { useState, useCallback, useEffect, useMemo, useRef } = React;
+
+        const ALL_CURRENCIES = [
+            { code: "USD", name: "United States Dollar" },
+            { code: "EUR", name: "Euro" },
+            { code: "JPY", name: "Japanese Yen" },
+            { code: "GBP", name: "British Pound Sterling" },
+            { code: "AUD", name: "Australian Dollar" },
+            { code: "CAD", name: "Canadian Dollar" },
+            { code: "CHF", name: "Swiss Franc" },
+            { code: "CNY", name: "Chinese Yuan" },
+            { code: "HKD", name: "Hong Kong Dollar" },
+            { code: "NZD", name: "New Zealand Dollar" },
+            { code: "SEK", name: "Swedish Krona" },
+            { code: "KRW", name: "South Korean Won" },
+            { code: "SGD", name: "Singapore Dollar" },
+            { code: "NOK", name: "Norwegian Krone" },
+            { code: "MXN", name: "Mexican Peso" },
+            { code: "INR", name: "Indian Rupee" },
+            { code: "RUB", name: "Russian Ruble" },
+            { code: "ZAR", name: "South African Rand" },
+            { code: "BRL", name: "Brazilian Real" },
+            { code: "TRY", name: "Turkish Lira" },
+            { code: "AED", name: "United Arab Emirates Dirham" },
+            { code: "AFN", name: "Afghan Afghani" },
+            { code: "ALL", name: "Albanian Lek" },
+            { code: "AMD", name: "Armenian Dram" },
+            { code: "ANG", name: "Netherlands Antillean Guilder" },
+            { code: "AOA", name: "Angolan Kwanza" },
+            { code: "ARS", name: "Argentine Peso" },
+            { code: "AWG", name: "Aruban Florin" },
+            { code: "AZN", name: "Azerbaijani Manat" },
+            { code: "BAM", name: "Bosnia-Herzegovina Convertible Mark" },
+            { code: "BBD", name: "Barbadian Dollar" },
+            { code: "BDT", name: "Bangladeshi Taka" },
+            { code: "BGN", name: "Bulgarian Lev" },
+            { code: "BHD", name: "Bahraini Dinar" },
+            { code: "BIF", name: "Burundian Franc" },
+            { code: "BMD", name: "Bermudan Dollar" },
+            { code: "BND", name: "Brunei Dollar" },
+            { code: "BOB", name: "Bolivian Boliviano" },
+            { code: "BSD", name: "Bahamian Dollar" },
+            { code: "BTN", name: "Bhutanese Ngultrum" },
+            { code: "BWP", name: "Botswanan Pula" },
+            { code: "BYN", name: "Belarusian Ruble" },
+            { code: "BZD", name: "Belize Dollar" },
+            { code: "CDF", name: "Congolese Franc" },
+            { code: "CLP", name: "Chilean Peso" },
+            { code: "COP", name: "Colombian Peso" },
+            { code: "CRC", name: "Costa Rican Colón" },
+            { code: "CUP", name: "Cuban Peso" },
+            { code: "CVE", name: "Cape Verdean Escudo" },
+            { code: "CZK", name: "Czech Koruna" },
+            { code: "DJF", name: "Djiboutian Franc" },
+            { code: "DKK", name: "Danish Krone" },
+            { code: "DOP", name: "Dominican Peso" },
+            { code: "DZD", name: "Algerian Dinar" },
+            { code: "EGP", name: "Egyptian Pound" },
+            { code: "ERN", name: "Eritrean Nakfa" },
+            { code: "ETB", name: "Ethiopian Birr" },
+            { code: "FJD", name: "Fijian Dollar" },
+            { code: "FKP", name: "Falkland Islands Pound" },
+            { code: "FOK", name: "Faroese Króna" },
+            { code: "GEL", name: "Georgian Lari" },
+            { code: "GGP", name: "Guernsey Pound" },
+            { code: "GHS", name: "Ghanaian Cedi" },
+            { code: "GIP", name: "Gibraltar Pound" },
+            { code: "GMD", name: "Gambian Dalasi" },
+            { code: "GNF", name: "Guinean Franc" },
+            { code: "GTQ", name: "Guatemalan Quetzal" },
+            { code: "GYD", name: "Guyanaese Dollar" },
+            { code: "HNL", name: "Honduran Lempira" },
+            { code: "HRK", name: "Croatian Kuna" },
+            { code: "HTG", name: "Haitian Gourde" },
+            { code: "HUF", name: "Hungarian Forint" },
+            { code: "IDR", name: "Indonesian Rupiah" },
+            { code: "ILS", name: "Israeli New Shekel" },
+            { code: "IMP", name: "Manx pound" },
+            { code: "IQD", name: "Iraqi Dinar" },
+            { code: "IRR", name: "Iranian Rial" },
+            { code: "ISK", name: "Icelandic Króna" },
+            { code: "JEP", name: "Jersey Pound" },
+            { code: "JMD", name: "Jamaican Dollar" },
+            { code: "JOD", name: "Jordanian Dinar" },
+            { code: "KES", name: "Kenyan Shilling" },
+            { code: "KGS", name: "Kyrgystani Som" },
+            { code: "KHR", name: "Cambodian Riel" },
+            { code: "KID", name: "Kiribati Dollar" },
+            { code: "KMF", name: "Comorian Franc" },
+            { code: "KWD", name: "Kuwaiti Dinar" },
+            { code: "KYD", name: "Cayman Islands Dollar" },
+            { code: "KZT", name: "Kazakhstani Tenge" },
+            { code: "LAK", name: "Laotian Kip" },
+            { code: "LBP", name: "Lebanese Pound" },
+            { code: "LKR", name: "Sri Lankan Rupee" },
+            { code: "LRD", name: "Liberian Dollar" },
+            { code: "LSL", name: "Lesotho Loti" },
+            { code: "LYD", name: "Libyan Dinar" },
+            { code: "MAD", name: "Moroccan Dirham" },
+            { code: "MDL", name: "Moldovan Leu" },
+            { code: "MGA", name: "Malagasy Ariary" },
+            { code: "MKD", name: "Macedonian Denar" },
+            { code: "MMK", name: "Myanmar Kyat" },
+            { code: "MNT", name: "Mongolian Tugrik" },
+            { code: "MOP", name: "Macanese Pataca" },
+            { code: "MRU", name: "Mauritanian Ouguiya" },
+            { code: "MUR", name: "Mauritian Rupee" },
+            { code: "MVR", name: "Maldivian Rufiyaa" },
+            { code: "MWK", name: "Malawian Kwacha" },
+            { code: "MYR", name: "Malaysian Ringgit" },
+            { code: "MZN", name: "Mozambican Metical" },
+            { code: "NAD", name: "Namibian Dollar" },
+            { code: "NGN", name: "Nigerian Naira" },
+            { code: "NIO", name: "Nicaraguan Córdoba" },
+            { code: "NPR", name: "Nepalese Rupee" },
+            { code: "OMR", name: "Omani Rial" },
+            { code: "PAB", name: "Panamanian Balboa" },
+            { code: "PEN", name: "Peruvian Sol" },
+            { code: "PGK", name: "Papua New Guinean Kina" },
+            { code: "PHP", name: "Philippine Peso" },
+            { code: "PKR", name: "Pakistani Rupee" },
+            { code: "PLN", name: "Polish Zloty" },
+            { code: "PYG", name: "Paraguayan Guarani" },
+            { code: "QAR", name: "Qatari Rial" },
+            { code: "RON", name: "Romanian Leu" },
+            { code: "RSD", name: "Serbian Dinar" },
+            { code: "RWF", name: "Rwandan Franc" },
+            { code: "SAR", name: "Saudi Riyal" },
+            { code: "SBD", name: "Solomon Islands Dollar" },
+            { code: "SCR", name: "Seychellois Rupee" },
+            { code: "SDG", name: "Sudanese Pound" },
+            { code: "SHP", name: "Saint Helena Pound" },
+            { code: "SLE", name: "Sierra Leonean Leone" },
+            { code: "SOS", name: "Somali Shilling" },
+            { code: "SRD", name: "Surinamese Dollar" },
+            { code: "SSP", name: "South Sudanese Pound" },
+            { code: "STN", name: "São Tomé and Príncipe Dobra" },
+            { code: "SYP", name: "Syrian Pound" },
+            { code: "SZL", name: "Swazi Lilangeni" },
+            { code: "THB", name: "Thai Baht" },
+            { code: "TJS", name: "Tajikistani Somoni" },
+            { code: "TMT", name: "Turkmenistani Manat" },
+            { code: "TND", name: "Tunisian Dinar" },
+            { code: "TOP", name: "Tongan Paʻanga" },
+            { code: "TTD", name: "Trinidad and Tobago Dollar" },
+            { code: "TVD", name: "Tuvaluan Dollar" },
+            { code: "TWD", name: "New Taiwan Dollar" },
+            { code: "TZS", name: "Tanzanian Shilling" },
+            { code: "UAH", name: "Ukrainian Hryvnia" },
+            { code: "UGX", name: "Ugandan Shilling" },
+            { code: "UYU", name: "Uruguayan Peso" },
+            { code: "UZS", name: "Uzbekistani Som" },
+            { code: "VES", name: "Venezuelan Bolívar Soberano" },
+            { code: "VND", name: "Vietnamese Dong" },
+            { code: "VUV", name: "Vanuatu Vatu" },
+            { code: "WST", name: "Samoan Tala" },
+            { code: "XAF", name: "Central African CFA Franc" },
+            { code: "XCD", name: "East Caribbean Dollar" },
+            { code: "XDR", name: "Special Drawing Rights" },
+            { code: "XOF", name: "West African CFA Franc" },
+            { code: "XPF", name: "CFP Franc" },
+            { code: "YER", name: "Yemeni Rial" },
+            { code: "ZMW", name: "Zambian Kwacha" },
+            { code: "ZWL", name: "Zimbabwean Dollar" }
+        ];
+
+        const CURRENCYFREAKS_API_KEY = "4ef0434d70b442ed82b63a8cf7b28efc";
+
+        async function fetchExchangeRateFromCurrencyFreaks(fromCode, toCode) {
+            if (fromCode === toCode) return 1.0;
+            const url = `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${CURRENCYFREAKS_API_KEY}&symbols=${toCode}&base=${fromCode}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data && data.rates && typeof data.rates[toCode] === "string") {
+                const rate = parseFloat(data.rates[toCode]);
+                if (isNaN(rate) || rate <= 0) throw new Error("Invalid rate.");
+                return rate;
+            }
+            throw new Error("Missing exchange rate.");
+        }
+
+        const ChevronDownIcon = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+        );
+
+        const SwapIcon = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h18m-7.5-14L21 7.5m0 0L16.5 12M21 7.5H3"></path>
+            </svg>
+        );
+
+        const SearchableDropdown = ({ label, options, selectedOption, onOptionSelect }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [searchTerm, setSearchTerm] = useState('');
+            const dropdownRef = useRef(null);
+
+            const selectedCurrency = useMemo(
+                () => options.find(opt => opt.code === selectedOption) || null,
+                [options, selectedOption]
+            );
+
+            const filteredOptions = useMemo(() => {
+                if (!searchTerm) return options;
+                const lowerSearchTerm = searchTerm.toLowerCase();
+                return options.filter(
+                    (option) =>
+                        option.name.toLowerCase().includes(lowerSearchTerm) ||
+                        option.code.toLowerCase().includes(lowerSearchTerm)
+                );
+            }, [options, searchTerm]);
+
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                        setIsOpen(false);
+                    }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            const handleSelectOption = (optionCode) => {
+                onOptionSelect(optionCode);
+                setSearchTerm('');
+                setIsOpen(false);
+            };
+
+            const getDisplayName = (currency) => {
+                if (!currency) return `Select ${label.toLowerCase()}`;
+                return `${currency.code} - ${currency.name}`;
+            };
+
+            return (
+                <div className="dropdown" ref={dropdownRef}>
+                    <label className="label">{label}</label>
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="dropdown-button"
+                    >
+                        <span>{getDisplayName(selectedCurrency)}</span>
+                        <ChevronDownIcon />
+                    </button>
+                    {isOpen && (
+                        <div className="dropdown-content">
+                            <div className="dropdown-search">
+                                <input
+                                    type="text"
+                                    placeholder="Search currency..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            {filteredOptions.length > 0 ? (
+                                filteredOptions.map((option) => (
+                                    <div
+                                        key={option.code}
+                                        onClick={() => handleSelectOption(option.code)}
+                                        className={`dropdown-option ${selectedOption === option.code ? 'selected' : ''}`}
+                                    >
+                                        {option.code} - {option.name}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="dropdown-option">No currencies found.</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const CurrencyConverter = () => {
+            const [amount, setAmount] = useState('1');
+            const [fromCurrency, setFromCurrency] = useState('USD');
+            const [toCurrency, setToCurrency] = useState('EUR');
+            const [convertedAmount, setConvertedAmount] = useState(null);
+            const [exchangeRate, setExchangeRate] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState(null);
+
+            const handleAmountChange = (e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setAmount(value);
+                    if (value !== '' && parseFloat(value) > 0) setError(null);
+                }
+            };
+
+            const handleCurrencyChange = (setter) => (currencyCode) => {
+                setter(currencyCode);
+                setConvertedAmount(null);
+                setExchangeRate(null);
+                setError(null);
+            };
+
+            const handleSwapCurrencies = () => {
+                const currentFrom = fromCurrency;
+                const currentTo = toCurrency;
+                setFromCurrency(currentTo);
+                setToCurrency(currentFrom);
+                setConvertedAmount(null);
+                setExchangeRate(null);
+                setError(null);
+            };
+
+            const triggerConversion = useCallback(async (currentAmount, currentFrom, currentTo) => {
+                if (currentAmount <= 0) {
+                    setError("Please enter a positive amount to convert.");
+                    setConvertedAmount(null);
+                    setExchangeRate(null);
+                    return;
+                }
+                if (currentFrom === currentTo) {
+                    setExchangeRate(1);
+                    setConvertedAmount(currentAmount);
+                    setError(null);
+                    setIsLoading(false);
+                    return;
+                }
+                setError(null);
+                setIsLoading(true);
+                setConvertedAmount(null);
+                setExchangeRate(null);
+                try {
+                    const rate = await fetchExchangeRateFromCurrencyFreaks(currentFrom, currentTo);
+                    setExchangeRate(rate);
+                    setConvertedAmount(currentAmount * rate);
+                } catch (err) {
+                    setError("Failed to get exchange rate. Please try again.");
+                    setConvertedAmount(null);
+                    setExchangeRate(null);
+                } finally {
+                    setIsLoading(false);
+                }
+            }, []);
+
+            const handleConvert = () => {
+                const numericAmount = parseFloat(amount);
+                if (isNaN(numericAmount) || numericAmount <= 0) {
+                    setError("Please enter a valid positive amount.");
+                    setConvertedAmount(null);
+                    setExchangeRate(null);
+                    return;
+                }
+                triggerConversion(numericAmount, fromCurrency, toCurrency);
+            };
+
+            return (
+                <div className="currency-converter-container">
+                    <div className="converter-card">
+                        <h1 className="title">Otto Currency Converter</h1>
+                        
+                        <div className="form-group">
+                            <label className="label">Amount</label>
+                            <input
+                                type="text"
+                                value={amount}
+                                onChange={handleAmountChange}
+                                placeholder="e.g., 100.50"
+                                className="input"
+                            />
+                        </div>
+
+                        <div className="currency-row">
+                            <div className="currency-select">
+                                <SearchableDropdown
+                                    label="From"
+                                    options={ALL_CURRENCIES}
+                                    selectedOption={fromCurrency}
+                                    onOptionSelect={handleCurrencyChange(setFromCurrency)}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSwapCurrencies}
+                                className="swap-button"
+                                style={{ marginTop: '1.5rem' }}
+                            >
+                                <SwapIcon />
+                            </button>
+                            <div className="currency-select">
+                                <SearchableDropdown
+                                    label="To"
+                                    options={ALL_CURRENCIES}
+                                    selectedOption={toCurrency}
+                                    onOptionSelect={handleCurrencyChange(setToCurrency)}
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleConvert}
+                            disabled={isLoading || !amount || parseFloat(amount) <= 0}
+                            className="convert-button"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="spinner"></div>
+                                    Converting...
+                                </>
+                            ) : (
+                                "Convert"
+                            )}
+                        </button>
+
+                        {error && (
+                            <div className="error-card">
+                                <div className="error-title">Error:</div>
+                                <div>{error}</div>
+                            </div>
+                        )}
+
+                        {!isLoading && !error && convertedAmount !== null && exchangeRate !== null && parseFloat(amount) > 0 && (
+                            <div className="result-card">
+                                <div className="result-amount">
+                                    {parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {fromCurrency} =
+                                    <span style={{ marginLeft: '0.25rem' }}>
+                                        {convertedAmount.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: convertedAmount < 0.01 && convertedAmount !== 0 ? 8 : 4,
+                                        })}{" "}
+                                        {toCurrency}
+                                    </span>
+                                </div>
+                                <div className="exchange-rate">
+                                    Exchange Rate: 1 {fromCurrency} = {exchangeRate.toFixed(exchangeRate < 0.0001 && exchangeRate !== 0 ? 8 : 4)} {toCurrency}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CurrencyConverter />, document.getElementById('currency-converter-root'));
+    </script>
+</body>
+</html>
+
